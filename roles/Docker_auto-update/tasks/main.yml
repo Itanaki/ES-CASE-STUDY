@@ -1,0 +1,44 @@
+---
+- name: Install docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Add user to docker group
+  user:
+    name: enzo
+    groups: docker
+    append: yes
+
+- name: Start docker service
+  service: 
+    name: docker
+    state: started
+
+- name: Copy the docker update automation file
+  copy:
+    src: "Dockerfile"
+    dest: "/home/enzo"
+    owner: enzo
+    group: enzo
+    mode: "0755"
+
+- name: Copy the update_os.sh script file
+  copy:
+    src: "update_os.sh"
+    dest: "/home/enzo"
+    owner: enzo
+    group: enzo
+    mode: "0755"
+
+- name: Build the docker update automation image
+  command: docker build -t imageupdateautomation /home/enzo
+  args:
+    chdir: "/home/enzo"
+
+- name: Create and run the docker update automation container
+  docker_container:
+    name: containerupdateautomation
+    image: imageupdateautomation
+    state: started
+    detach: yes
